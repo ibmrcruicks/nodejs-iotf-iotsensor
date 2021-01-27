@@ -5,16 +5,41 @@ const express = require('express');
 const HTTP = require("http");
 const WebSocket = require('ws');
 
+if (process.env.VCAP_SERVICES) {
+	var env = JSON.parse(process.env.VCAP_SERVICES);
+	console.log(env);
+
+	if (env["iotf-service"])
+	{
+		iot_props = env['iotf-service'][0]['credentials'];
+		console.log(iot_props);
+	}
+	else
+	{
+		console.log('You must bind an Internet of Things service to this application');
+	}
+}
+var iot_host = iot_props["mqtt_host"];
+var iot_org = iot_props["org"];
+var iot_port = iot_props["mqtt_u_port"];
+var iot_user = iot_props["apiKey"];
+var iot_pass = iot_props["apiToken"];
+var iot_name = iot_props["iotCredentialsIdentifier"];
+
+var device_type = "IOTsimulator";
+
 const app = express();
 const port = process.env.PORT || 3000;
 
-var mqttURI = uri.parse(process.env.MQTT_BROKER_URI || 'mqtt://localhost:1883');
-var auth = [process.env.MQTT_BROKER_USER,process.env.MQTT_BROKER_PASS];
-var mqttUrl = mqttURI.protocol + "//" + mqttURI.host;
+var mqttURI = uri.parse(process.env.MQTT_BROKER_URI || 'mqtt://' + iot_host + ':' + iot_port);
+var auth = [ process.env.MQTT_BROKER_USER||iot_user, process.env.MQTT_BROKER_PASS||iot_pass ];
+var mqttUrl = "mqtt://" + MQTT_BROKER_HOST||iot_host;
 console.log(mqttURI)
-const clientId = 'mqtt_iot_' + Math.random().toString(16).substr(2, 8);
-const mqttSubTopic = "hello" ;
-const mqttPubTopic = mqttSubTopic + "/" + clientId;
+const device_id = 'mqtt_iot_' + Math.random().toString(16).substr(2, 8);
+const clientId = 'a:'+ iot_org + ':' + process.env.CF_INSTANCE_GUID||iot_name;
+
+const mqttSubTopic = 'iot-2/type/'+ device_type +'/id/+/evt/+/fmt/json' ;
+const mqttPubTopic = 'iot-2/type/'+ device_type +'/id/' + device_id + '/evt/sim/fmt/json';
 
 DNS.lookup(mqttURI.hostname,function(err,addr,fam){
   if(err || mqttURI.hostname === ''){
@@ -72,7 +97,7 @@ var humidity = 75;
 function tick(wait) {
   var temp = 1.0 * ((Math.random()*5)+17).toFixed(2) ; //random temp 17-22
   var msg = { d:
-                { deviceId: clientId,
+                { deviceId: device_id,
                   index: count++,
                   temp: temp,
                   settemp: settemp,
