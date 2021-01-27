@@ -5,7 +5,3 @@ applications:
   random-route: true
   memory: 48M
   instances: 1
-  env:
-    MQTT_BROKER_URI: mqtt://<your-broker-host>:1883
-    MQTT_BROKER_USER: <broker-user-name>
-    MQTT_BROKER_PASS: <broker-user-password>
