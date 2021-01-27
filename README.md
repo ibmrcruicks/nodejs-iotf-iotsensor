@@ -1,11 +1,11 @@
-# nodejs-mqtt-iotsensor
-sensor emulator with raw MQTT - configure via env with broker credentials
+# nodejs-iotf-iotsensor
+sensor emulator with raw MQTT, communicating with IBM Internet of Things Foundation instance - configure via Cloud Foundry binding/connection (VCAP_SERVICES)
 
 ** Work in progress **
 
 ![mqtt](/assets/mqtt-hor-neg.png)
 
-A simple [MQTT](https://mqtt.org) publisher that generates a JSON observation document to an MQTT Broker - example below:
+A simple [MQTT](https://mqtt.org) publisher that generates a JSON observation document to an IBM IOTF service instance - example below:
 
 ```
 { d: 
@@ -17,7 +17,7 @@ A simple [MQTT](https://mqtt.org) publisher that generates a JSON observation do
 }
 ```
 
-To run this , you will need a Node.js runtime (local, container, Cloud Foundry, for example), and the connection credentials for an MQTT Broker.
+To run this , you will need a Node.js runtime (local, container, Cloud Foundry, for example), bound to an IBM Internet of Things Foundation service instance.
 
 Once running you will be able to control the simulated obvserations through a simple web page:
 ![control page](/assets/control-page.png)
@@ -25,9 +25,37 @@ Once running you will be able to control the simulated obvserations through a si
 ## Environment settings
 
 ```
-MQTT_BROKER_URI=mqtt://<hostname>:<tcp-port> || localhost:1883
-MQTT_BROKER_USER=<username>
-MQTT_BROKER_PASS=<password>
+VCAP_SERVICES : {
+"iotf-service": [
+    {
+      "label": "iotf-service",
+      "provider": null,
+      "plan": "iotf-service-standard",
+      "name": "Internet of Things Platform-vava",
+      "tags": [
+        "internet_of_things",
+        "Internet of Things",
+        "ibm_created",
+        "ibm_dedicated_public",
+        "lite",
+        "ibmcloud-alias"
+      ],
+      "instance_name": "Internet of Things Platform-vava",
+      "binding_name": null,
+      "credentials": {
+        "iotCredentialsIdentifier": "xxxxx",
+        "mqtt_host": "xxxxx.messaging.internetofthings.ibmcloud.com",
+        "mqtt_u_port": 1883,
+        "mqtt_s_port": 8883,
+        "http_host": "xxxxx.internetofthings.ibmcloud.com",
+        "org": "xxxxx",
+        "apiKey": "a-xxxxx-vavavavava",
+        "apiToken": "vavavavavavavavava"
+      },
+      "syslog_drain_url": null,
+      "volume_mounts": []
+    }
+  ]
 ```
 
 ## Running in the IBM Cloud
