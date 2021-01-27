@@ -1,7 +1,7 @@
 ---
 version: 1
 applications:
-- name: mqtt-iot-sensor
+- name: iotf-iot-sensor
   random-route: true
   memory: 48M
   instances: 1
