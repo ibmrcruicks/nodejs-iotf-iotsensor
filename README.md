@@ -64,18 +64,16 @@ This app can be run as a Cloud Foundry node.js application, by
 1. cloning this repository locally running the [ibmcloud cli](https://cloud.ibm.com/docs/cli?topic=cli-install-ibmcloud-cli) `ibmcloud cf push` command
 1. cloning/forking this repository to github, creating an [open toolchain], and linking to your copy of the repository
 
-In either case, you will need to update the manifest.yaml file to set the MQTT environment for connecting to your MQTT Broker.
+In either case, you will need to update the manifest.yaml file to set the service name for your Internet of Things service instance.
 
-[![Deploy to IBM Cloud](https://cloud.ibm.com/devops/setup/deploy/button.png)](https://cloud.ibm.com/devops/setup/deploy?repository=https://github.com/ibmrcruicks/nodejs-mqtt-iotsensor)
+[![Deploy to IBM Cloud](https://cloud.ibm.com/devops/setup/deploy/button.png)](https://cloud.ibm.com/devops/setup/deploy?repository=https://github.com/ibmrcruicks/nodejs-iotf-iotsensor)
 
-You can create a free MQTT Broker using [cloudamqp](https://cloud.ibm.com/catalog/services/cloudamqp), 
-use free cloud-based brokers like [eclipse IOT](https://mqtt.eclipse.org/), or [hivemq](https://www.hivemq.com/public-mqtt-broker/)
-
+You can create a free Internet of Things service using [IBM Cloud](https://cloud.ibm.com/catalog/services/iotf-service).
 ## Running locally
 
 This app can be run locally, by
 1. clone this repository locally
 1. run `npm install`
-1. export the required environment variables for your MQTT Broker
+1. export the required environment variables for your IOT Service
 1. run `npm start`
 1. browse to the [control page](http://localhost:3000)
