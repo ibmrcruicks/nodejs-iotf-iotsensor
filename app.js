@@ -96,7 +96,7 @@ mqttClient.on('connect', function() { // When connected
 
 // observation features
 var count = 0;
-var tock = 2000;
+var tock = 30000;
 var settemp = 20;
 var humidity = 75;
 
@@ -137,7 +137,7 @@ function makeForm(msg){
   html += "<table>"
   html += "<tr>"
   html += "<td><label for=timer>Publishing interval</label></td>";
-  html += "<td><input type=range name=timer min=1 max=30 value="+tock/1000;
+  html += "<td><input type=range name=timer min=1 max=500 value="+tock/1000;
   html += " oninput='o_timer.value=this.value;'></td>";
   html += "<td><output name=o_timer for=timer>"+tock/1000+"</output></td>"
   html += "</tr>"
