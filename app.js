@@ -7,18 +7,20 @@ const WebSocket = require('ws');
 
 if (process.env.VCAP_SERVICES) {
 	var env = JSON.parse(process.env.VCAP_SERVICES);
-	console.log(env);
+	//console.log(env);
 
 	if (env["iotf-service"])
 	{
 		iot_props = env['iotf-service'][0]['credentials'];
-		console.log(iot_props);
+	//	console.log(iot_props);
 	}
 	else
 	{
 		console.log('You must bind an Internet of Things service to this application');
+		process.exit(16);
 	}
 }
+
 var iot_host = iot_props["mqtt_host"];
 var iot_org = iot_props["org"];
 var iot_port = iot_props["mqtt_u_port"];
@@ -26,20 +28,21 @@ var iot_user = iot_props["apiKey"];
 var iot_pass = iot_props["apiToken"];
 var iot_name = iot_props["iotCredentialsIdentifier"];
 
-var device_type = "IOTsimulator";
+var deviceType = "IOTsimulator";
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 var mqttURI = uri.parse(process.env.MQTT_BROKER_URI || 'mqtt://' + iot_host + ':' + iot_port);
 var auth = [ process.env.MQTT_BROKER_USER||iot_user, process.env.MQTT_BROKER_PASS||iot_pass ];
-var mqttUrl = "mqtt://" + MQTT_BROKER_HOST||iot_host;
-console.log(mqttURI)
-const device_id = 'mqtt_iot_' + Math.random().toString(16).substr(2, 8);
+console.log(auth);
+var mqttUrl = mqttURI.protocol + "//" + mqttURI.host;
+console.log(mqttUrl);
+const deviceId = 'mqtt_iot_' + Math.random().toString(16).substr(2, 8);
 const clientId = 'a:'+ iot_org + ':' + process.env.CF_INSTANCE_GUID||iot_name;
 
-const mqttSubTopic = 'iot-2/type/'+ device_type +'/id/+/evt/+/fmt/json' ;
-const mqttPubTopic = 'iot-2/type/'+ device_type +'/id/' + device_id + '/evt/sim/fmt/json';
+const mqttSubTopic = 'iot-2/type/'+ deviceType +'/id/+/evt/+/fmt/json' ;
+const mqttPubTopic = 'iot-2/type/'+ deviceType +'/id/' + deviceId + '/evt/sim/fmt/json';
 
 DNS.lookup(mqttURI.hostname,function(err,addr,fam){
   if(err || mqttURI.hostname === ''){
@@ -74,12 +77,16 @@ wsServer.on('connection',function(socket){
 // Create a client connection
 var mqttClient = MQTT.connect(mqttUrl, mqttOptions);
 
+mqttClient.on("error", (e) => {
+  console.log("MQTT error." + e.message);
+});
+
 mqttClient.on('connect', function() { // When connected
   console.log("MQTT connected");
-  mqttClient.subscribe(mqttSubTopic + "/#", function() {
+  mqttClient.subscribe(mqttSubTopic, function() {
     mqttClient.on('message', function(topic, message, packet) {
       var strmsg = "[" + topic + "]:" + message.toString(); // message arrives as a Buffer
-      console.log(strmsg);
+      //console.log(strmsg);
       if (wsConnected) {
         wsSender.send(strmsg)
       };
@@ -97,7 +104,7 @@ var humidity = 75;
 function tick(wait) {
   var temp = 1.0 * ((Math.random()*5)+17).toFixed(2) ; //random temp 17-22
   var msg = { d:
-                { deviceId: device_id,
+                { deviceId: deviceId,
                   index: count++,
                   temp: temp,
                   settemp: settemp,
@@ -106,6 +113,7 @@ function tick(wait) {
                 },
                 timestamp: Math.floor(Date.now()/1000)
               };
+// console.log(msg);
   if(mqttClient.connected){
     mqttClient.publish(mqttPubTopic, JSON.stringify(msg), function() {
     });
@@ -123,7 +131,7 @@ function makeForm(msg){
   html += "var wsListener = new WebSocket(((window.location.protocol === 'https:') ? 'wss://' : 'ws://') + window.location.host + '" +wsPath+ "');"
   html += "wsListener.onmessage = function(event){document.getElementById('"+wsPath+"').innerHTML=event.data};"
   html += "</script>";
-  html += "<h1>"+clientId+"</h1>"
+  html += "<h1>"+deviceId+"</h1>"
   html += msg || "&nbsp;";
   html +="<form method=post>";
   html += "<table>"
