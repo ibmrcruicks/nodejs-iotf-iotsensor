@@ -3,5 +3,7 @@ version: 1
 applications:
 - name: iotf-iot-sensor
   random-route: true
-  memory: 48M
+  memory: 128M
   instances: 1
+  services:
+   - "Internet of Things-rdc-gb"
