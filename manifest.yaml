@@ -6,4 +6,4 @@ applications:
   memory: 128M
   instances: 1
   services:
-   - "Internet of Things-rdc-gb"
+   - "Internet of Things-lite"
