@@ -7,3 +7,5 @@ applications:
   instances: 1
   services:
    - "Internet of Things-lite"
+  env:
+    MQTT_DEVICE_PREFIX "mqtt_iot_"
