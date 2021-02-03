@@ -26,9 +26,12 @@ var iot_org = iot_props["org"];
 var iot_port = iot_props["mqtt_u_port"];
 var iot_user = iot_props["apiKey"];
 var iot_pass = iot_props["apiToken"];
-var iot_name = iot_props["iotCredentialsIdentifier"];
+var iot_name = iot_props["iotCredentialsIdentifier"]
 
-var deviceType = "IOTsimulator";
+const deviceType = "IOTsimulator";
+
+const devicePrefix = process.env.MQTT_DEVICE_PREFIX || "";
+const deviceIndex  = process.env.CF_INSTANCE_INDEX || "0";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -38,8 +41,12 @@ var auth = [ process.env.MQTT_BROKER_USER||iot_user, process.env.MQTT_BROKER_PAS
 console.log(auth);
 var mqttUrl = mqttURI.protocol + "//" + mqttURI.host;
 console.log(mqttUrl);
-const deviceId = 'mqtt_iot_' + Math.random().toString(16).substr(2, 8);
 const clientId = 'a:'+ iot_org + ':' + process.env.CF_INSTANCE_GUID||iot_name;
+
+var deviceId = 'mqtt_iot_' + Math.random().toString(16).substr(2, 8);
+if(devicePrefix){
+  deviceId = devicePrefix + deviceIndex;
+}
 
 const mqttSubTopic = 'iot-2/type/'+ deviceType +'/id/+/evt/+/fmt/json' ;
 const mqttPubTopic = 'iot-2/type/'+ deviceType +'/id/' + deviceId + '/evt/sim/fmt/json';
