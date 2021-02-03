@@ -17,14 +17,16 @@ A simple [MQTT](https://mqtt.org) publisher that generates a JSON observation do
 }
 ```
 
-To run this , you will need a Node.js runtime (local, container, Cloud Foundry, for example), bound to an IBM Internet of Things Foundation service instance.
+To run this, you will need a Node.js runtime (local, container, Cloud Foundry, for example), bound to an IBM Internet of Things Foundation (WIOTF) service instance.
+*NOTE:* you will need to modify the `manifest.yaml` to refer to your WIOTF service name. 
+
+The application will publish events using a generated deviceId name - this defaults to `mqtt_iot_` followed by a random hex number; this can be made more deterministic by setting the `MQTT_DEVICE_PREFIX` environment variable, either in the `manifest.yaml` or from the Cloud Foundry application console (Runtime --> Environment variables). If the environment variable is set, the deviceId name will be the prefix string appended with the instance index of the Cloud Foundry app; as the application is scaled up from 1, the index will rise from 0.
 
 Once running you will be able to control the simulated obvserations through a simple web page:
 ![control page](/assets/control-page.png)
-
-## Environment settings
-
-```
+ 
+<details><summary>Example Environment settings from Cloud Foundry</summary>
+<pre>
 VCAP_SERVICES : {
 "iotf-service": [
     {
@@ -56,7 +58,8 @@ VCAP_SERVICES : {
       "volume_mounts": []
     }
   ]
-```
+</pre>
+</details>
 
 ## Running in the IBM Cloud
 
@@ -64,11 +67,11 @@ This app can be run as a Cloud Foundry node.js application, by
 1. cloning this repository locally running the [ibmcloud cli](https://cloud.ibm.com/docs/cli?topic=cli-install-ibmcloud-cli) `ibmcloud cf push` command
 1. cloning/forking this repository to github, creating an [open toolchain], and linking to your copy of the repository
 
-In either case, you will need to update the manifest.yaml file to set the service name for your Internet of Things service instance.
+*_In either case, you will need to update the manifest.yaml file to set the service name for your Internet of Things service instance._*
 
 [![Deploy to IBM Cloud](https://cloud.ibm.com/devops/setup/deploy/button.png)](https://cloud.ibm.com/devops/setup/deploy?repository=https://github.com/ibmrcruicks/nodejs-iotf-iotsensor)
 
-You can create a free Internet of Things service using [IBM Cloud](https://cloud.ibm.com/catalog/services/iotf-service).
+You can create a free Internet of Things service using [IBM Cloud catalog - IOT](https://cloud.ibm.com/catalog/services/iotf-service).
 ## Running locally
 
 This app can be run locally, by
