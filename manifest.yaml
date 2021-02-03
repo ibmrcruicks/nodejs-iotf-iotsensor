@@ -2,8 +2,10 @@
 version: 1
 applications:
 - name: iotf-iot-sensor
+  buildpacks:
+   - "nodejs_buildpack"
   random-route: true
-  memory: 128M
+  memory: 80M
   instances: 1
   services:
    - "Internet of Things-lite"
