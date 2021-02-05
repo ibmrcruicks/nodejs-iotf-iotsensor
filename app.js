@@ -22,7 +22,7 @@ if (process.env.VCAP_SERVICES) {
 }
 
 var iot_host = iot_props["mqtt_host"];
-var iot_org = iot_props["org"];
+var iot_org  = iot_props["org"];
 var iot_port = iot_props["mqtt_u_port"];
 var iot_user = iot_props["apiKey"];
 var iot_pass = iot_props["apiToken"];
@@ -136,7 +136,14 @@ function makeForm(msg){
   html += "<!-- simple websocket listener to update page with newest event -->";
   html += "<script>";
   html += "var wsListener = new WebSocket(((window.location.protocol === 'https:') ? 'wss://' : 'ws://') + window.location.host + '" +wsPath+ "');"
-  html += "wsListener.onmessage = function(event){document.getElementById('"+wsPath+"').innerHTML=event.data};"
+  html += "wsListener.onmessage = function(event){"
+  html += "document.getElementById('"+wsPath+"').innerHTML=event.data;"
+  html += "var msg = event.data.split(']:')[1];"
+  html += "var evt = event.data.split(']:')[0].split('/');"
+  html += "  if((evt.length === 9) && (evt[6] === 'cmd')){"
+  html += "    document.getElementById('actuator').innerHTML=msg;"  
+  html += "  }"
+  html += "}; //onmessage"
   html += "</script>";
   html += "<h1>"+deviceId+"</h1>"
   html += msg || "&nbsp;";
@@ -149,16 +156,21 @@ function makeForm(msg){
   html += "<td><output name=o_timer for=timer>"+tock/1000+"</output></td>"
   html += "</tr>"
   html += "<tr>"
-  html += "<td><label for=timer>Set temperature</label></td>";
+  html += "<td><label for=settemmp>Set temperature</label></td>";
   html += "<td><input type=range name=settemp min=-10 max=40 value="+settemp;
   html += " oninput='o_settemp.value=this.value;'></td>";
   html += "<td><output name=o_settemp for=settemp>"+settemp+"</output></td>"
   html += "</tr>"
   html += "<tr>"
-  html += "<td><label for=timer>Humidity</label></td>";
+  html += "<td><label for=humidity>Humidity</label></td>";
   html += "<td><input type=range name=humidity min=1 max=100 value="+humidity;
   html +=" oninput='o_humidity.value=this.value;'></td>";
   html += "<td><output name=o_humidity for=humidity>"+humidity+"</output></td>"
+  html += "</tr>"
+  html += "<tr>"
+  html += "<td><label for=actutator>Actuator</label></td>";
+  html += "<td><div id=cmd></div>/td>";
+  html += "<td><div id=actuator></div></td>"
   html += "</tr>"
   html += "</table>"
   html += "<input type=submit value=Update>";
