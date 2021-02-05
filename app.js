@@ -62,7 +62,7 @@ DNS.lookup(mqttURI.hostname,function(err,addr,fam){
 
 var mqttOptions = {
   protocol: mqttURI.protocol.split(":")[0],
-  rejectUnauthorized: false,
+  rejectUnauthorized: false,  // allow certs self-signed or missing CA 
   clean: true,
   port: mqttURI.port,
   clientId: clientId,
@@ -96,20 +96,29 @@ mqttClient.on('connect', function() { // When connected
       //console.log(strmsg);
       if (wsConnected) {
         wsSender.send(strmsg)
-      };
+      }
+      // check for injected timeseries value
+      var evt = topic.split(']:')[0].split('/');
+      if((evt.length === 9) && (evt[6] === 'timeseries')){
+        var setting = JSON.parse(message).set ||'';
+        if(setting){
+          settemp = parseInt(setting);
+        }
+      }
     });
   })
 });
 
 // observation features
 var count = 0;
-var tock = 30000;
+var tock = 60000;
 var settemp = 20;
 var humidity = 75;
+var temp = settemp;
 
 // in each timeout, publish an observation to MQTT topic
 function tick(wait) {
-  var temp = 1.0 * ((Math.random()*5)+17).toFixed(2) ; //random temp 17-22
+  temp = settemp + (1.0 * ((Math.random()*2)-1).toFixed(2)) ; //randomize temp
   var msg = { d:
                 { deviceId: deviceId,
                   index: count++,
@@ -130,53 +139,112 @@ function tick(wait) {
 // start publish/subscribe timer
 setTimeout(tick,tock,tock);
 
-function makeForm(msg){
-  var html = "";
-  html += "<html><head><title>IOT Simulator</title><link rel=stylesheet href='/styles.css'></head><body>";
-  html += "<!-- simple websocket listener to update page with newest event -->";
-  html += "<script>";
-  html += "var wsListener = new WebSocket(((window.location.protocol === 'https:') ? 'wss://' : 'ws://') + window.location.host + '" +wsPath+ "');"
-  html += "wsListener.onmessage = function(event){"
-  html += "document.getElementById('"+wsPath+"').innerHTML=event.data;"
-  html += "var msg = event.data.split(']:')[1];"
-  html += "var evt = event.data.split(']:')[0].split('/');"
-  html += "  if((evt.length === 9) && (evt[6] === 'cmd')){"
-  html += "    document.getElementById('actuator').innerHTML=msg;"  
-  html += "  }"
-  html += "}; //onmessage"
-  html += "</script>";
-  html += "<h1>"+deviceId+"</h1>"
-  html += msg || "&nbsp;";
-  html +="<form method=post>";
-  html += "<table>"
-  html += "<tr>"
-  html += "<td><label for=timer>Publishing interval</label></td>";
-  html += "<td><input type=range name=timer min=1 max=500 value="+tock/1000;
-  html += " oninput='o_timer.value=this.value;'></td>";
-  html += "<td><output name=o_timer for=timer>"+tock/1000+"</output></td>"
-  html += "</tr>"
-  html += "<tr>"
-  html += "<td><label for=settemmp>Set temperature</label></td>";
-  html += "<td><input type=range name=settemp min=-10 max=40 value="+settemp;
-  html += " oninput='o_settemp.value=this.value;'></td>";
-  html += "<td><output name=o_settemp for=settemp>"+settemp+"</output></td>"
-  html += "</tr>"
-  html += "<tr>"
-  html += "<td><label for=humidity>Humidity</label></td>";
-  html += "<td><input type=range name=humidity min=1 max=100 value="+humidity;
-  html +=" oninput='o_humidity.value=this.value;'></td>";
-  html += "<td><output name=o_humidity for=humidity>"+humidity+"</output></td>"
-  html += "</tr>"
-  html += "<tr>"
-  html += "<td><label for=actutator>Actuator</label></td>";
-  html += "<td><div id=cmd></div>/td>";
-  html += "<td><div id=actuator></div></td>"
-  html += "</tr>"
-  html += "</table>"
-  html += "<input type=submit value=Update>";
-  html += "</form>";
-  html += "<div id='"+wsPath+"'></div>";
-  html += "</body></html>";
+function makePage(msg){
+  var html = `
+  <html>
+  <head>
+  <title>IOT Simulator</title>
+  <!--link rel=stylesheet href='/styles.css'-->
+  </head>
+  <body>
+  <style>
+  output {
+    display: block;
+    background-color: darkcyan;
+    text-align:center;
+    vertical-align: bottom;
+    width: 75px;
+    height: 75px;
+    border-width: thick;
+    border-style: double;
+    border-color: white;
+    font-size: 60px;
+    color: white;
+  }
+  label {
+    color: blue;
+  }
+  h1 {
+    color: white;
+    background-color: black;
+    width: 50%;
+    height: 50px;
+  }
+  .float {
+    background-color: skyblue;
+    width: 150px;
+  }
+  </style>
+  <!-- simple websocket listener to update page with newest event -->
+  <script>
+  var wsListener = new WebSocket(((window.location.protocol === 'https:') ? 'wss://' : 'ws://') + window.location.host + '${wsPath}');
+  wsListener.onmessage = function(event){
+      document.getElementById('${wsPath}').innerHTML=event.data;
+      var txt = event.data.split(']:')[1];
+      var evt = event.data.split(']:')[0].split('/');
+        if((evt.length === 9) && (evt[6] === 'cmd')){
+          document.getElementById('cmd').innerHTML=txt;
+          var color = JSON.parse(txt).set ||'';
+          if(color) {
+            document.getElementById('actuator').style.backgroundColor=color;
+          }  
+        }
+        if((evt.length === 9) && (evt[6] === 'sim') && (evt[4] === '${deviceId}')){
+          var reading = JSON.parse(txt).d.temp ||'';
+          if(reading) {
+            document.getElementById('temp').innerHTML=reading;
+          }  
+        }
+      }; //onmessage
+  </script>
+  <h1>${deviceId}</h1>
+  ${msg}&nbsp;
+  <form method=post>
+  
+
+  <fieldset><legend>Settings</legend>
+  <table>
+  <tr>
+  <td><label for=timer>Publishing interval</label></td>
+  <td><output name=o_timer for=timer>${tock/1000}</output></td>
+  <td><input type=range name=timer min=1 max=600 value=${tock/1000}
+      oninput='o_timer.value=this.value;'></td>
+  </tr>
+  <tr>
+  <td><label for=settemp>Set temperature</label></td>
+  <td><output name=o_settemp for=settemp>${settemp}</output></td>
+  <td><input type=range name=settemp min=-10 max=40 value=${settemp}
+      oninput='o_settemp.value=this.value;'></td>
+  </tr>
+  <tr>
+  <td><label for=humidity>Humidity</label></td>
+  <td><output name=o_humidity for=humidity>${humidity}</output></td>
+  <td><input type=range name=humidity min=1 max=100 value=${humidity}
+      oninput='o_humidity.value=this.value;'></td>
+  </tr>
+  </table>
+  </fieldset>
+  <fieldset><legend>Readings</legend>
+  <table>
+  <tr>
+  <td><label for=temp>Observed Temperature</label></td>
+  <td><output id=temp class=float>${temp}</output></td>
+  <td></td>
+  </tr>
+  <tr>
+  <td><label for=actuator>Actuator</label></td>
+  <td><output id=actuator class=float></output></td>
+  <td><div id=cmd></div></td>
+  </tr>
+  </table>
+  </fieldset>
+
+  <input type=submit value=Update>
+  </form>
+  <div id='${wsPath}'></div>
+  </body>
+  </html>
+  `;
   return html;
 }
 
@@ -187,7 +255,7 @@ app.use(express.static('assets'))
 
 //Send the form
 app.get('/', (req, res) => {
-  res.send(makeForm())
+  res.send(makePage(''))
 })
 //receive form input, and adjust observations
 app.post('/',(req, res) => {
@@ -196,12 +264,13 @@ app.post('/',(req, res) => {
   }
   if(req.body.settemp){
     settemp = parseInt(req.body.settemp);
+    temp = settemp;
   }
   if(req.body.humidity){
     humidity = parseInt(req.body.humidity);
   }
   //respond with the form
-  res.send(makeForm("Timer now: "+tock+" milliseconds"))
+  res.send(makePage(`Timer now: ${tock} milliseconds`))
 })
 
 //off we go
