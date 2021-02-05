@@ -80,3 +80,22 @@ This app can be run locally, by
 1. export the required environment variables for your IOT Service
 1. run `npm start`
 1. browse to the [control page](http://localhost:3000)
+
+## Actuator Command interface
+
+A simple command interface, implemented via MQTT messaging, allows applications to send commands to the simulated device; in this example, the command is implemented as an event-type of `cmd`, with a message format of `{"set":"<css-color-name>"}`. The effect is to change the color of the `Actuator` display in the user interface:
+
+![iotsensor-ui](/assets/iotsensor-ui.png)
+
+Set the color using values from [W3Schools CSS Colors](https://www.w3schools.com/cssref/css_colors.asp).
+
+## Timeseries injection
+
+Using a similar mechanism to the Actuator interface, the sensor can be told to adjust its temperature setting, using an event-type of `timeseries` with a message format of `{"set":int-or-float-number}`. The effect is to change the current base set value, and the associated observed value. 
+
+Use an external MQTT application to inject the timeseries values via generation, or from a sample dataset.
+
+A sample [Node-RED flow](/assets/command-flow.json) shows how to manually send commands, and inject timeseries value changes.
+
+![node-red-command](/assets/command-flow.png)
+
